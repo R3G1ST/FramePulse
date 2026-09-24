@@ -351,7 +351,15 @@ namespace FramePulseSetup
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-            Rectangle box = new Rectangle(0, 14, 22, 22);
+
+            Rectangle cardR = new Rectangle(0, 0, Width - 1, Height - 1);
+            GraphicsPath cardPath = PaintUtil.RoundRect(cardR.X, cardR.Y, cardR.Width, cardR.Height, 12);
+            using (SolidBrush b = new SolidBrush(_hover ? Sys.Card2 : Sys.Card))
+                e.Graphics.FillPath(b, cardPath);
+            using (Pen p = new Pen(_hover ? Color.FromArgb(70, 110, 200, 255) : Sys.Border))
+                e.Graphics.DrawPath(p, cardPath);
+
+            Rectangle box = new Rectangle(16, (Height - 22) / 2, 22, 22);
             GraphicsPath path = PaintUtil.RoundRect(box.X, box.Y, box.Width, box.Height, 6);
 
             if (Checked)
@@ -369,17 +377,17 @@ namespace FramePulseSetup
             }
             else
             {
-                using (SolidBrush b = new SolidBrush(Sys.Card))
+                using (SolidBrush b = new SolidBrush(Sys.Bg))
                     e.Graphics.FillPath(b, path);
                 using (Pen p = new Pen(_hover ? Sys.Accent : Sys.Border))
                     e.Graphics.DrawPath(p, path);
             }
 
-            RectangleF titleR = new RectangleF(36, 10, Width - 36, 22);
-            RectangleF hintR = new RectangleF(36, 30, Width - 36, 22);
+            RectangleF titleR = new RectangleF(52, 12, Width - 64, 20);
+            RectangleF hintR = new RectangleF(52, 34, Width - 64, 18);
             using (SolidBrush b = new SolidBrush(Sys.Text))
-                e.Graphics.DrawString(Title, Font, b, titleR);
-            using (Font hf = new Font(Font.FontFamily, Font.Size - 1f, FontStyle.Regular))
+                e.Graphics.DrawString(Title, new Font(Font.FontFamily, 10f, FontStyle.Bold), b, titleR);
+            using (Font hf = new Font(Font.FontFamily, 8.5f, FontStyle.Regular))
             using (SolidBrush b = new SolidBrush(Sys.Faint))
                 e.Graphics.DrawString(Hint, hf, b, hintR);
         }
@@ -581,8 +589,6 @@ namespace FramePulseSetup
             close.Primary = false;
             close.Click += delegate { Close(); };
             _titleBar.Controls.Add(close);
-
-            Controls.Add(_titleBar);
         }
 
         void TitleBarMouseDown(object sender, MouseEventArgs e)
@@ -596,17 +602,20 @@ namespace FramePulseSetup
 
         void BuildBody()
         {
-            Panel body = new Panel();
-            body.Dock = DockStyle.Fill;
-            body.BackColor = Sys.Bg;
-
             _side = new SidePanel();
             _side.Dock = DockStyle.Left;
             _side.Width = 240;
 
-            Panel right = new Panel();
-            right.Dock = DockStyle.Fill;
-            right.BackColor = Sys.Bg;
+            _page = new Panel();
+            _page.Dock = DockStyle.Fill;
+            _page.BackColor = Sys.Bg;
+            _page.Padding = new Padding(32, 24, 32, 16);
+
+            Panel body = new Panel();
+            body.Dock = DockStyle.Fill;
+            body.BackColor = Sys.Bg;
+            body.Controls.Add(_page);
+            body.Controls.Add(_side);
 
             _footer = new Panel();
             _footer.Dock = DockStyle.Bottom;
@@ -617,41 +626,35 @@ namespace FramePulseSetup
                 using (Pen p = new Pen(Sys.Border))
                     e.Graphics.DrawLine(p, 0, 0, _footer.Width, 0);
             };
-
-            _page = new Panel();
-            _page.Dock = DockStyle.Fill;
-            _page.BackColor = Sys.Bg;
-            _page.Padding = new Padding(32, 24, 32, 16);
+            _footer.Resize += FooterLayout;
 
             _btnBack = new FlatButton();
             _btnBack.Text = "Назад";
             _btnBack.Size = new Size(120, 40);
-            _btnBack.Location = new Point(32, 16);
-            _btnBack.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             _btnBack.Click += BtnBackClick;
 
             _btnNext = new FlatButton();
             _btnNext.Text = "Далее";
             _btnNext.Primary = true;
             _btnNext.Size = new Size(170, 40);
-            _btnNext.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             _btnNext.Click += BtnNextClick;
 
             _footer.Controls.Add(_btnBack);
             _footer.Controls.Add(_btnNext);
 
-            right.Controls.Add(_page);
-            right.Controls.Add(_footer);
-            body.Controls.Add(right);
-            body.Controls.Add(_side);
             Controls.Add(body);
+            Controls.Add(_footer);
+            Controls.Add(_titleBar);
+            FooterLayout(_footer, EventArgs.Empty);
+        }
 
-            _titleBar.BringToFront();
-            _footer.Resize += delegate
-            {
-                _btnNext.Location = new Point(_footer.Width - _btnNext.Width - 32, 16);
-            };
-            _btnNext.Location = new Point(_footer.Width - _btnNext.Width - 32, 16);
+        void FooterLayout(object sender, EventArgs e)
+        {
+            if (_footer == null || _btnBack == null || _btnNext == null) return;
+            int pad = 24;
+            int mid = Math.Max(0, (_footer.Height - _btnBack.Height) / 2);
+            _btnBack.Location = new Point(pad, mid);
+            _btnNext.Location = new Point(Math.Max(pad, _footer.Width - _btnNext.Width - pad), mid);
         }
 
         void ClearPage()
@@ -671,93 +674,173 @@ namespace FramePulseSetup
             else if (step == 2) BuildProgress();
             else BuildDone();
 
-            _btnBack.Enabled = step == 1;
             _btnBack.Visible = step < 3;
-            _btnNext.Visible = step < 3;
-            if (step == 0) { _btnNext.Text = "Далее"; _btnNext.Enabled = true; }
-            else if (step == 1) { _btnNext.Text = "Установить"; _btnNext.Enabled = true; }
+            _btnNext.Visible = true;
+
+            if (step == 0)
+            {
+                _btnBack.Enabled = false;
+                _btnNext.Enabled = true;
+                _btnNext.Text = "Далее";
+            }
+            else if (step == 1)
+            {
+                _btnBack.Enabled = true;
+                _btnNext.Enabled = true;
+                _btnNext.Text = "Установить";
+            }
+            else if (step == 2)
+            {
+                _btnBack.Enabled = false;
+                _btnNext.Enabled = false;
+                _btnNext.Text = "Установка…";
+            }
+            else
+            {
+                _btnBack.Visible = false;
+                _btnNext.Enabled = true;
+                _btnNext.Text = "Готово";
+            }
+
+            FooterLayout(_footer, EventArgs.Empty);
         }
 
         void BuildWelcome()
         {
-            Label t = new Label();
-            t.Text = "Установка FramePulse";
-            t.Font = new Font("Segoe UI", 18f, FontStyle.Bold);
-            t.ForeColor = Sys.Text;
-            t.AutoSize = true;
-            t.Location = new Point(0, 4);
-            _page.Controls.Add(t);
+            int cw = Math.Max(360, _page.ClientSize.Width - _page.Padding.Horizontal);
 
-            Label s = new Label();
-            s.Text = "Игровой оверлей: FPS, время кадра, ЦП / ГП и температура поверх игры.\nРусский интерфейс · мульти-монитор · хоткеи · живые настройки.";
-            s.Font = new Font("Segoe UI", 10.5f);
-            s.ForeColor = Sys.Muted;
-            s.AutoSize = false;
-            s.Size = new Size(_page.ClientSize.Width - 64, 56);
-            s.Location = new Point(0, 40);
-            _page.Controls.Add(s);
+            Panel hero = new Panel();
+            hero.Location = new Point(0, 0);
+            hero.Size = new Size(cw, 96);
+            hero.BackColor = Color.Transparent;
+            hero.Paint += delegate(object o, PaintEventArgs e)
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                PaintUtil.DrawLogo(e.Graphics, 0, 8, 56);
 
-            Panel card = new Panel();
-            card.Location = new Point(0, 110);
-            card.Size = new Size(_page.ClientSize.Width - 64, 170);
-            card.BackColor = Sys.Card;
-            card.Paint += delegate(object o, PaintEventArgs e)
-            {
-                using (Pen p = new Pen(Sys.Border)) e.Graphics.DrawRectangle(p, 0, 0, card.Width - 1, card.Height - 1);
+                using (Font f = new Font("Segoe UI", 20f, FontStyle.Bold))
+                using (SolidBrush b = new SolidBrush(Sys.Text))
+                    e.Graphics.DrawString("FramePulse", f, b, new PointF(72, 12));
+
+                using (Font f = new Font("Segoe UI", 10.5f))
+                using (SolidBrush b = new SolidBrush(Sys.Muted))
+                    e.Graphics.DrawString("Игровой оверлей для Windows", f, b, new PointF(74, 46));
+
+                using (Font f = new Font("Segoe UI", 9f))
+                using (SolidBrush b = new SolidBrush(Sys.Faint))
+                    e.Graphics.DrawString("v" + AppInfo.Version + "  ·  " + AppInfo.Publisher, f, b, new PointF(74, 68));
             };
-            string[] bullets = new string[] {
-                "PresentMon — точный FPS и low 1%",
-                "ЦП, ГП, температура, VRAM и ОЗУ",
-                "Панель растягивается по контенту, без обрезки",
-                "Настройки применяются сразу, без перезапуска"
+            _page.Controls.Add(hero);
+
+            Label lead = new Label();
+            lead.Text = "FPS, время кадра, ЦП / ГП и температура — поверх игры.\nРусский интерфейс, мульти-монитор и живые настройки.";
+            lead.Font = new Font("Segoe UI", 11f);
+            lead.ForeColor = Sys.Muted;
+            lead.AutoSize = false;
+            lead.Size = new Size(cw, 52);
+            lead.Location = new Point(0, 112);
+            _page.Controls.Add(lead);
+
+            string[][] feats = new string[][] {
+                new string[] { "PresentMon", "Точный FPS и low 1% в реальном времени" },
+                new string[] { "Система", "ЦП, ГП, температура, VRAM и ОЗУ" },
+                new string[] { "Интерфейс", "Панель тянется по контенту, без обрезки" },
+                new string[] { "Настройки", "Применяются сразу — без перезапуска" }
             };
-            int y = 16;
-            for (int i = 0; i < bullets.Length; i++)
+
+            int cardW = (cw - 12) / 2;
+            int cardH = 78;
+            int x0 = 0, y0 = 184;
+            for (int i = 0; i < feats.Length; i++)
             {
-                Label b = new Label();
-                b.Text = "▸  " + bullets[i];
-                b.Font = new Font("Segoe UI", 10f);
-                b.ForeColor = i % 2 == 0 ? Sys.Text : Sys.Muted;
-                b.AutoSize = true;
-                b.Location = new Point(18, y);
-                card.Controls.Add(b);
-                y += 34;
+                int col = i % 2;
+                int row = i / 2;
+                Panel card = new Panel();
+                card.Location = new Point(x0 + col * (cardW + 12), y0 + row * (cardH + 12));
+                card.Size = new Size(cardW, cardH);
+                card.BackColor = Sys.Card;
+                string title = feats[i][0];
+                string hint = feats[i][1];
+                card.Paint += delegate(object o, PaintEventArgs e)
+                {
+                    e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                    Rectangle r = new Rectangle(0, 0, card.Width - 1, card.Height - 1);
+                    GraphicsPath path = PaintUtil.RoundRect(r.X, r.Y, r.Width, r.Height, 12);
+                    using (SolidBrush b = new SolidBrush(Sys.Card))
+                        e.Graphics.FillPath(b, path);
+                    using (Pen p = new Pen(Sys.Border))
+                        e.Graphics.DrawPath(p, path);
+
+                    Rectangle bar = new Rectangle(0, 14, 3, card.Height - 28);
+                    GraphicsPath bp = PaintUtil.RoundRect(bar.X, bar.Y, bar.Width, bar.Height, 2);
+                    using (LinearGradientBrush b = new LinearGradientBrush(bar, Sys.Accent, Sys.Accent2, 90f))
+                        e.Graphics.FillPath(b, bp);
+
+                    using (Font tf = new Font("Segoe UI", 10f, FontStyle.Bold))
+                    using (SolidBrush tb = new SolidBrush(Sys.Text))
+                        e.Graphics.DrawString(title, tf, tb, new PointF(18, 16));
+
+                    using (Font hf = new Font("Segoe UI", 9f))
+                    using (SolidBrush hb = new SolidBrush(Sys.Faint))
+                        e.Graphics.DrawString(hint, hf, hb, new RectangleF(18, 40, card.Width - 32, 30));
+                };
+                _page.Controls.Add(card);
             }
-            _page.Controls.Add(card);
 
-            Label meta = new Label();
-            meta.Text = "Версия " + AppInfo.Version + "  ·  Windows 10 / 11  ·  " + AppInfo.Publisher;
-            meta.Font = new Font("Segoe UI", 9f);
-            meta.ForeColor = Sys.Faint;
-            meta.AutoSize = true;
-            meta.Location = new Point(0, 300);
-            _page.Controls.Add(meta);
+            Label note = new Label();
+            note.Text = "Windows 10 / 11  ·  .NET Framework 4.x  ·  MIT License";
+            note.Font = new Font("Segoe UI", 9f);
+            note.ForeColor = Sys.Faint;
+            note.AutoSize = true;
+            note.Location = new Point(0, y0 + 2 * (cardH + 12) + 16);
+            _page.Controls.Add(note);
         }
 
         void BuildOptions()
         {
-            _h1 = new Label();
-            _h1.Text = "Куда ставить";
-            _h1.Font = new Font("Segoe UI", 16f, FontStyle.Bold);
-            _h1.ForeColor = Sys.Text;
-            _h1.AutoSize = true;
-            _h1.Location = new Point(0, 4);
-            _page.Controls.Add(_h1);
+            int cw = Math.Max(360, _page.ClientSize.Width - _page.Padding.Horizontal);
 
+            Label h = new Label();
+            h.Text = "Параметры установки";
+            h.Font = new Font("Segoe UI", 18f, FontStyle.Bold);
+            h.ForeColor = Sys.Text;
+            h.AutoSize = true;
+            h.Location = new Point(0, 0);
+            _page.Controls.Add(h);
+
+            Label sub = new Label();
+            sub.Text = "Выберите папку и что настроить после установки.";
+            sub.Font = new Font("Segoe UI", 10.5f);
+            sub.ForeColor = Sys.Muted;
+            sub.AutoSize = true;
+            sub.Location = new Point(0, 36);
+            _page.Controls.Add(sub);
+
+            Label pathLbl = new Label();
+            pathLbl.Text = "Папка установки";
+            pathLbl.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+            pathLbl.ForeColor = Sys.Faint;
+            pathLbl.AutoSize = true;
+            pathLbl.Location = new Point(0, 78);
+            _page.Controls.Add(pathLbl);
+
+            int boxW = Math.Max(280, cw - 120);
             _dirBox = new TextBox();
             _dirBox.Text = _dir;
             _dirBox.Font = new Font("Segoe UI", 10f);
             _dirBox.BackColor = Sys.Card;
             _dirBox.ForeColor = Sys.Text;
             _dirBox.BorderStyle = BorderStyle.FixedSingle;
-            _dirBox.Location = new Point(0, 42);
-            _dirBox.Size = new Size(440, 26);
+            _dirBox.Location = new Point(0, 102);
+            _dirBox.Size = new Size(boxW, 28);
             _page.Controls.Add(_dirBox);
 
             FlatButton browse = new FlatButton();
             browse.Text = "Обзор…";
-            browse.Size = new Size(110, 32);
-            browse.Location = new Point(450, 40);
+            browse.Size = new Size(104, 32);
+            browse.Location = new Point(boxW + 10, 100);
             browse.Click += delegate(object o, EventArgs e)
             {
                 using (FolderBrowserDialog dlg = new FolderBrowserDialog())
@@ -775,40 +858,43 @@ namespace FramePulseSetup
             opt.Font = new Font("Segoe UI", 13f, FontStyle.Bold);
             opt.ForeColor = Sys.Text;
             opt.AutoSize = true;
-            opt.Location = new Point(0, 92);
+            opt.Location = new Point(0, 154);
             _page.Controls.Add(opt);
 
             _ckDesk = new CheckRow();
             _ckDesk.Title = "Ярлык на рабочем столе";
             _ckDesk.Hint = "Быстрый запуск в один клик";
             _ckDesk.Checked = _desktop;
-            _ckDesk.Location = new Point(0, 128);
-            _ckDesk.Width = 540;
+            _ckDesk.Location = new Point(0, 190);
+            _ckDesk.Width = cw;
+            _ckDesk.Height = 60;
             _page.Controls.Add(_ckDesk);
 
             _ckStart = new CheckRow();
             _ckStart.Title = "Запускать вместе с Windows";
             _ckStart.Hint = "Оверлей будет готов при входе в систему";
             _ckStart.Checked = _startup;
-            _ckStart.Location = new Point(0, 190);
-            _ckStart.Width = 540;
+            _ckStart.Location = new Point(0, 262);
+            _ckStart.Width = cw;
+            _ckStart.Height = 60;
             _page.Controls.Add(_ckStart);
 
             _ckCfg = new CheckRow();
             _ckCfg.Title = "Применить настройки по умолчанию";
             _ckCfg.Hint = "Текущие параметры оверлея (config.ini)";
             _ckCfg.Checked = _config;
-            _ckCfg.Location = new Point(0, 252);
-            _ckCfg.Width = 540;
+            _ckCfg.Location = new Point(0, 334);
+            _ckCfg.Width = cw;
+            _ckCfg.Height = 60;
             _page.Controls.Add(_ckCfg);
 
             Label note = new Label();
             note.Text = "Требуются права администратора. Старая версия (если есть) будет остановлена и заменена.";
             note.Font = new Font("Segoe UI", 9f);
             note.ForeColor = Sys.Faint;
-            note.AutoSize = true;
-            note.MaximumSize = new Size(540, 0);
-            note.Location = new Point(0, 330);
+            note.AutoSize = false;
+            note.Size = new Size(cw, 32);
+            note.Location = new Point(0, 412);
             _page.Controls.Add(note);
 
             _dirBox.TextChanged += delegate { _dir = _dirBox.Text; };
@@ -852,9 +938,6 @@ namespace FramePulseSetup
             _log.Size = new Size(540, 300);
             _log.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             _page.Controls.Add(_log);
-
-            _btnBack.Enabled = false;
-            _btnNext.Enabled = false;
         }
 
         void BuildDone()
@@ -934,6 +1017,10 @@ namespace FramePulseSetup
                 }
                 ShowStep(2);
                 BeginInstall(false);
+            }
+            else if (_step == 3)
+            {
+                Close();
             }
         }
 
@@ -1021,7 +1108,9 @@ namespace FramePulseSetup
                         }
                         else
                         {
+                            _btnBack.Visible = true;
                             _btnBack.Enabled = true;
+                            _btnNext.Visible = true;
                             _btnNext.Enabled = true;
                             _btnNext.Text = "Повторить";
                             SetStatus("Ошибка установки");
@@ -1034,8 +1123,11 @@ namespace FramePulseSetup
                 {
                     MethodInvoker done = delegate
                     {
+                        _btnBack.Visible = true;
                         _btnBack.Enabled = true;
+                        _btnNext.Visible = true;
                         _btnNext.Enabled = true;
+                        _btnNext.Text = "Повторить";
                         MessageBox.Show(this, ex.Message, AppInfo.Name, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     };
                     try { BeginInvoke(done); } catch { }
