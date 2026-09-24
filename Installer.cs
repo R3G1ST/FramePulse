@@ -507,6 +507,8 @@ namespace FramePulseSetup
 
         SidePanel _side;
         Panel _page;
+        Panel _footer;
+        Panel _titleBar;
         Label _h1;
         TextBox _dirBox;
         CheckRow _ckDesk;
@@ -521,34 +523,30 @@ namespace FramePulseSetup
         Label _doneTitle;
         Label _doneHint;
 
+        [DllImport("user32.dll")]
+        static extern bool ReleaseCapture();
+        [DllImport("user32.dll")]
+        static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        const int WM_NCLBUTTONDOWN = 0xA1;
+        const int HTCAPTION = 0x2;
+
         public SetupForm(bool silent)
         {
             _silent = silent;
             _dir = AppInfo.DefaultDir();
 
             Text = AppInfo.Name + " Setup";
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            MaximizeBox = false;
-            MinimizeBox = false;
+            FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
-            ClientSize = new Size(880, 540);
+            ClientSize = new Size(900, 560);
             BackColor = Sys.Bg;
             Font = new Font("Segoe UI", 10f);
             KeyPreview = true;
+            MinimizeBox = false;
+            MaximizeBox = false;
 
-            _side = new SidePanel();
-            _side.Dock = DockStyle.Left;
-            _side.Width = 240;
-
-            _page = new Panel();
-            _page.Dock = DockStyle.Fill;
-            _page.BackColor = Sys.Bg;
-            _page.Padding = new Padding(36, 28, 36, 20);
-
-            Controls.Add(_page);
-            Controls.Add(_side);
-
-            BuildChrome();
+            BuildTitleBar();
+            BuildBody();
             ShowStep(0);
 
             if (_silent)
@@ -557,42 +555,103 @@ namespace FramePulseSetup
             }
         }
 
-        void BuildChrome()
+        void BuildTitleBar()
         {
-            Panel footer = new Panel();
-            footer.Dock = DockStyle.Bottom;
-            footer.Height = 72;
-            footer.BackColor = Sys.Panel;
-            footer.Paint += delegate(object s, PaintEventArgs e)
+            _titleBar = new Panel();
+            _titleBar.Dock = DockStyle.Top;
+            _titleBar.Height = 40;
+            _titleBar.BackColor = Sys.Panel;
+            _titleBar.Paint += delegate(object s, PaintEventArgs e)
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                PaintUtil.DrawLogo(e.Graphics, 12, 10, 20);
+                using (Pen p = new Pen(Sys.Border))
+                    e.Graphics.DrawLine(p, 0, 39, _titleBar.Width, 39);
+                using (SolidBrush b = new SolidBrush(Sys.Text))
+                using (Font f = new Font("Segoe UI", 9.5f, FontStyle.Bold))
+                    e.Graphics.DrawString(AppInfo.Name + " Setup", f, b, new PointF(42, 11));
+            };
+            _titleBar.MouseDown += TitleBarMouseDown;
+
+            FlatButton close = new FlatButton();
+            close.Text = "✕";
+            close.Size = new Size(46, 40);
+            close.Location = new Point(900 - 46, 0);
+            close.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            close.Primary = false;
+            close.Click += delegate { Close(); };
+            _titleBar.Controls.Add(close);
+
+            Controls.Add(_titleBar);
+        }
+
+        void TitleBarMouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+            }
+        }
+
+        void BuildBody()
+        {
+            Panel body = new Panel();
+            body.Dock = DockStyle.Fill;
+            body.BackColor = Sys.Bg;
+
+            _side = new SidePanel();
+            _side.Dock = DockStyle.Left;
+            _side.Width = 240;
+
+            Panel right = new Panel();
+            right.Dock = DockStyle.Fill;
+            right.BackColor = Sys.Bg;
+
+            _footer = new Panel();
+            _footer.Dock = DockStyle.Bottom;
+            _footer.Height = 72;
+            _footer.BackColor = Sys.Panel;
+            _footer.Paint += delegate(object s, PaintEventArgs e)
             {
                 using (Pen p = new Pen(Sys.Border))
-                    e.Graphics.DrawLine(p, 0, 0, footer.Width, 0);
+                    e.Graphics.DrawLine(p, 0, 0, _footer.Width, 0);
             };
+
+            _page = new Panel();
+            _page.Dock = DockStyle.Fill;
+            _page.BackColor = Sys.Bg;
+            _page.Padding = new Padding(32, 24, 32, 16);
 
             _btnBack = new FlatButton();
             _btnBack.Text = "Назад";
             _btnBack.Size = new Size(120, 40);
-            _btnBack.Location = new Point(260, 16);
+            _btnBack.Location = new Point(32, 16);
             _btnBack.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             _btnBack.Click += BtnBackClick;
 
             _btnNext = new FlatButton();
             _btnNext.Text = "Далее";
             _btnNext.Primary = true;
-            _btnNext.Size = new Size(160, 40);
-            _btnNext.Location = new Point(684, 16);
+            _btnNext.Size = new Size(170, 40);
             _btnNext.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             _btnNext.Click += BtnNextClick;
 
-            footer.Controls.Add(_btnBack);
-            footer.Controls.Add(_btnNext);
-            Controls.Add(footer);
-            _page.Height = ClientSize.Height - footer.Height;
-            _page.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            footer.BringToFront();
-            _side.BringToFront();
-            _page.BringToFront();
-            footer.SendToBack();
+            _footer.Controls.Add(_btnBack);
+            _footer.Controls.Add(_btnNext);
+
+            right.Controls.Add(_page);
+            right.Controls.Add(_footer);
+            body.Controls.Add(right);
+            body.Controls.Add(_side);
+            Controls.Add(body);
+
+            _titleBar.BringToFront();
+            _footer.Resize += delegate
+            {
+                _btnNext.Location = new Point(_footer.Width - _btnNext.Width - 32, 16);
+            };
+            _btnNext.Location = new Point(_footer.Width - _btnNext.Width - 32, 16);
         }
 
         void ClearPage()
@@ -623,24 +682,24 @@ namespace FramePulseSetup
         {
             Label t = new Label();
             t.Text = "Установка FramePulse";
-            t.Font = new Font("Segoe UI", 22f, FontStyle.Bold);
+            t.Font = new Font("Segoe UI", 18f, FontStyle.Bold);
             t.ForeColor = Sys.Text;
             t.AutoSize = true;
-            t.Location = new Point(0, 8);
+            t.Location = new Point(0, 4);
             _page.Controls.Add(t);
 
             Label s = new Label();
-            s.Text = "Игровой оверлей: FPS, время кадра, ЦП / ГП и температура поверх игры.\nРусский интерфейс · мульти-монитор · хоткеи · реал-тайм настройки.";
-            s.Font = new Font("Segoe UI", 11f);
+            s.Text = "Игровой оверлей: FPS, время кадра, ЦП / ГП и температура поверх игры.\nРусский интерфейс · мульти-монитор · хоткеи · живые настройки.";
+            s.Font = new Font("Segoe UI", 10.5f);
             s.ForeColor = Sys.Muted;
-            s.AutoSize = true;
-            s.MaximumSize = new Size(560, 0);
-            s.Location = new Point(0, 60);
+            s.AutoSize = false;
+            s.Size = new Size(_page.ClientSize.Width - 64, 56);
+            s.Location = new Point(0, 40);
             _page.Controls.Add(s);
 
             Panel card = new Panel();
-            card.Location = new Point(0, 140);
-            card.Size = new Size(560, 150);
+            card.Location = new Point(0, 110);
+            card.Size = new Size(_page.ClientSize.Width - 64, 170);
             card.BackColor = Sys.Card;
             card.Paint += delegate(object o, PaintEventArgs e)
             {
@@ -662,7 +721,7 @@ namespace FramePulseSetup
                 b.AutoSize = true;
                 b.Location = new Point(18, y);
                 card.Controls.Add(b);
-                y += 30;
+                y += 34;
             }
             _page.Controls.Add(card);
 
@@ -671,7 +730,7 @@ namespace FramePulseSetup
             meta.Font = new Font("Segoe UI", 9f);
             meta.ForeColor = Sys.Faint;
             meta.AutoSize = true;
-            meta.Location = new Point(0, 310);
+            meta.Location = new Point(0, 300);
             _page.Controls.Add(meta);
         }
 
