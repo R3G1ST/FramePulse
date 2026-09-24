@@ -2,7 +2,7 @@
 #define MyAppName "FramePulse"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "R3G1S"
-#define MyAppExeName "FpsOverlay.exe"
+#define MyAppExeName "FramePulse.exe"
 #define MyAppAssocName "FramePulse Overlay"
 #define MyAppAssocExt ".fpulse"
 #define CfgDir "{userappdata}\FpsOverlay"
@@ -41,10 +41,13 @@ Name: "startup"; Description: "Запускать вместе с Windows"; Grou
 Name: "config"; Description: "Применить настройки по умолчанию (текущие параметры оверлея)"; GroupDescription: "Конфигурация:"; Flags: unchecked
 
 [Files]
-Source: "dist\FpsOverlay.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\FramePulse.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\PresentMon.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "config.default.ini"; DestDir: "{tmp}"; Flags: dontcopy
+
+[InstallDelete]
+Type: Files; Name: "{app}\FpsOverlay.exe"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: "Игровой оверлей FPS / ЦП / ГП"
@@ -60,6 +63,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}
 
 [UninstallRun]
 Filename: "taskkill"; Parameters: "/F /IM {#MyAppExeName}"; RunOnceId: "KillOverlay"; Flags: runhidden
+Filename: "taskkill"; Parameters: "/F /IM FpsOverlay.exe"; RunOnceId: "KillOverlayOld"; Flags: runhidden
 Filename: "taskkill"; Parameters: "/F /IM PresentMon.exe"; RunOnceId: "KillPM"; Flags: runhidden
 
 [Code]
@@ -68,6 +72,7 @@ var
   ResultCode: Integer;
 begin
   Exec('taskkill', '/F /IM ' + '{#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill', '/F /IM FpsOverlay.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec('taskkill', '/F /IM PresentMon.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Result := '';
 end;
