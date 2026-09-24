@@ -124,7 +124,6 @@
 
 - Windows 10/11
 - [.NET Framework 4.8 Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net48) (или `csc.exe` из Windows)
-- [Inno Setup 6](https://jrsoftware.org/isinfo.php) — только для инсталлятора
 
 ### Сборка
 
@@ -137,11 +136,20 @@ build.bat
 
 ### Инсталлятор
 
-```powershell
-& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+```bat
+cd fps-overlay
+build-setup.bat
 ```
 
-Готовый файл: `..\installer\FramePulse-Setup.exe`
+Готовый файл: `..\installer\FramePulse-Setup.exe` — кастомный WinForms-мастер в стиле FramePulse (тёмная тема, шаги, опции, журнал, uninstaller в «Установка и удаление программ»).
+
+Режимы:
+
+```bat
+FramePulse-Setup.exe                 # интерактивная установка
+FramePulse-Setup.exe /uninstall      # удаление
+FramePulse-Setup.exe /uninstall /silent
+```
 
 ---
 
@@ -158,8 +166,12 @@ fps-overlay/
 ├── Program.cs            # Точка входа
 ├── app.manifest          # DPI, requireAdministrator
 ├── build.bat             # Сборка exe
-├── installer.iss         # Скрипт Inno Setup
+├── Installer.cs          # Кастомный инсталлятор
+├── setup.manifest        # Манифест инсталлятора
+├── build-setup.bat       # Сборка инсталлятора
+├── installer.iss         # Скрипт Inno Setup (резерв)
 ├── make-icon.ps1         # Генерация иконки
+├── make-wizard.ps1       # Картинки для Inno
 ├── icon.ico              # Иконка приложения
 └── config.default.ini    # Настройки по умолчанию
 ```

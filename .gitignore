@@ -2,6 +2,7 @@
 dist/
 bin/
 obj/
+out/
 *.user
 *.suo
 *.cache
