@@ -5,7 +5,7 @@
 <br>
 
 <p align="center">
-  <img alt="FramePulse" src="fps-overlay/icon.ico" width="96">
+  <img alt="FramePulse" src="icon.ico" width="96">
 </p>
 
 <p align="center">
