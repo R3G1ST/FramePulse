@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FramePulse — игровой оверлей</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0c12;
+      color: #e8eef8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 20px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(120, 190, 255, 0.12);
+      color: #7ec8ff;
+      border: 1px solid rgba(120, 190, 255, 0.35);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: clamp(40px, 8vw, 72px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #b8e6ff 0%, #7ec8ff 40%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .sub {
+      font-size: 18px;
+      color: #9aa8c0;
+      text-align: center;
+      max-width: 560px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    .panel {
+      background: rgba(8, 10, 14, 0.92);
+      border: 1px solid rgba(90, 120, 170, 0.45);
+      border-radius: 12px;
+      padding: 20px 24px;
+      width: 280px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(120, 190, 255, 0.06);
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      left: 4px; top: 10px; bottom: 10px;
+      width: 3px;
+      background: #7ec8ff;
+      border-radius: 2px;
+      opacity: 0.85;
+    }
+    .fps {
+      font-size: 32px;
+      font-weight: 700;
+      color: #b8e6ff;
+      line-height: 1;
+    }
+    .fps span { font-size: 11px; color: #9aa8c0; margin-left: 6px; font-weight: 400; }
+    .clock { position: absolute; right: 20px; top: 20px; color: #9aa8c0; font-size: 13px; }
+    .ft { font-size: 12px; color: #9aa8c0; margin-top: 4px; }
+    .sep { height: 1px; background: rgba(90, 120, 170, 0.5); margin: 12px 0; }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: #e8eef8;
+    }
+    .row .lbl { width: 36px; color: #9aa8c0; font-size: 10px; }
+    .row .val { width: 48px; font-weight: 600; }
+    .bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(30, 40, 55, 0.9);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #78beff, #5aa8f0);
+      border-radius: 3px;
+    }
+    .status { font-size: 10px; color: #a0aec0; margin-top: 14px; }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      width: 100%;
+      max-width: 720px;
+      margin-bottom: 40px;
+    }
+    .card {
+      background: rgba(18, 22, 32, 0.9);
+      border: 1px solid rgba(90, 120, 170, 0.3);
+      border-radius: 12px;
+      padding: 18px 16px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(126, 200, 255, 0.55);
+      transform: translateY(-2px);
+    }
+    .card .icon { font-size: 22px; margin-bottom: 8px; }
+    .card h3 { font-size: 14px; margin-bottom: 6px; color: #e8eef8; }
+    .card p { font-size: 12px; color: #9aa8c0; line-height: 1.5; }
+    .cta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, #3d8fd4, #5b6ef5);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(90, 110, 245, 0.35);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: #7ec8ff;
+      border: 1px solid rgba(126, 200, 255, 0.4);
+    }
+    .keys {
+      background: rgba(18, 22, 32, 0.9);
+      border: 1px solid rgba(90, 120, 170, 0.3);
+      border-radius: 12px;
+      padding: 20px 28px;
+      max-width: 520px;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+    .keys h2 { font-size: 14px; color: #7ec8ff; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .keys table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .keys td { padding: 8px 0; border-bottom: 1px solid rgba(90, 120, 170, 0.15); }
+    .keys td:first-child { color: #b8e6ff; font-family: Consolas, monospace; width: 55%; }
+    .keys td:last-child { color: #9aa8c0; text-align: right; }
+    .keys tr:last-child td { border-bottom: none; }
+    footer {
+      color: #5a6a84;
+      font-size: 13px;
+      text-align: center;
+      margin-top: auto;
+      padding-top: 24px;
+    }
+    footer b { color: #9aa8c0; }
+  </style>
+</head>
+<body>
+  <div class="badge">⚡ Windows 10/11 · Русский интерфейс · MIT</div>
+
+  <h1>FramePulse</h1>
+  <p class="sub">
+    Лёгкий игровой оверлей с настоящей прозрачностью.
+    FPS, время кадра, ЦП, ГП и память — поверх любой игры.
+  </p>
+
+  <div class="panel">
+    <div class="fps">144 <span>FPS</span></div>
+    <div class="clock">18:42</div>
+    <div class="ft">6.9 ms&nbsp;&nbsp;low1 12</div>
+    <div class="sep"></div>
+    <div class="row"><span class="lbl">ЦП</span><span class="val">34%</span><div class="bar"><i style="width:34%"></i></div></div>
+    <div class="row"><span class="lbl">ГП</span><span class="val">71%</span><div class="bar"><i style="width:71%;background:linear-gradient(90deg,#ffd250,#ff9a3d)"></i></div></div>
+    <div class="row"><span class="lbl">ТЕМП</span><span class="val">72°C</span></div>
+    <div class="row"><span class="lbl">ГП</span><span class="val">5.2/8.0</span></div>
+    <div class="row"><span class="lbl">ОЗУ</span><span class="val">12.4/32</span></div>
+    <div class="status">VALORANT-Win64-Shipping.exe</div>
+  </div>
+
+  <div class="features">
+    <div class="card"><div class="icon">🎯</div><h3>FPS и low 1%</h3><p>Точный замер через PresentMon в реальном времени</p></div>
+    <div class="card"><div class="icon">🖥</div><h3>ЦП и ГП</h3><p>Полоски загрузки с цветовой индикацией</p></div>
+    <div class="card"><div class="icon">🌡</div><h3>Температура</h3><p>NVIDIA NVML: норма, тепло, перегрев</p></div>
+    <div class="card"><div class="icon">💾</div><h3>Память</h3><p>Видеопамять и ОЗУ в одном месте</p></div>
+    <div class="card"><div class="icon">🎛</div><h3>Настройки</h3><p>Живое применение: строки, прозрачность, угол</p></div>
+    <div class="card"><div class="icon">📌</div><h3>Прозрачность</h3><p>Настоящий alpha-оверлей без белых краёв</p></div>
+  </div>
+
+  <div class="cta">
+    <a class="btn btn-primary" href="https://github.com/R3G1ST/FramePulse/releases">⬇️ Скачать FramePulse</a>
+    <a class="btn btn-ghost" href="https://github.com/R3G1ST/FramePulse">📦 Исходный код</a>
+  </div>
+
+  <div class="keys">
+    <h2>Горячие клавиши</h2>
+    <table>
+      <tr><td>Ctrl + Shift + F10</td><td>Скрыть / показать</td></tr>
+      <tr><td>Ctrl + Shift + F11</td><td>Следующий монитор</td></tr>
+      <tr><td>Ctrl + Shift + F12</td><td>Перетаскивание</td></tr>
+      <tr><td>Esc</td><td>Выйти из режима перетаскивания</td></tr>
+    </table>
+  </div>
+
+  <footer>Сделано с ❤️ для геймеров · <b>FramePulse</b> v1.0.0</footer>
+</body>
+</html>

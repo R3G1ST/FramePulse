@@ -1,0 +1,25 @@
+# Сборка
+dist/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+
+# Инсталлятор
+../installer/*.exe
+*.msi
+
+# Системные
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Логи и временные файлы
+*.log
+*.tmp
+__pycache__/
+*.pyc
+
+# Конфиги локальные (default — в репо)
+config.local.ini
