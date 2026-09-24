@@ -1,226 +1,1448 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FramePulse — игровой оверлей</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="FramePulse — лёгкий игровой оверлей для Windows: FPS, ЦП, ГП, температура и память поверх игры. Русский интерфейс.">
+  <meta name="theme-color" content="#07090f">
+  <meta property="og:title" content="FramePulse — игровой оверлей">
+  <meta property="og:description" content="FPS, время кадра, ЦП, ГП и память поверх любой игры.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://r3g1st.github.io/FramePulse/">
+  <title>FramePulse — игровой оверлей для Windows</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/R3G1ST/FramePulse/main/icon.png">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/R3G1ST/FramePulse/main/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #07090f;
+      --bg2: #0c101a;
+      --bg3: #121826;
+      --card: rgba(16, 22, 36, 0.72);
+      --card2: rgba(20, 28, 46, 0.85);
+      --border: rgba(120, 160, 220, 0.14);
+      --border2: rgba(120, 160, 220, 0.28);
+      --text: #eaf1ff;
+      --muted: #8fa0bd;
+      --faint: #5c6b88;
+      --accent: #6ec8ff;
+      --accent2: #7c6ef5;
+      --accent3: #3d8fd4;
+      --neon: #b8e6ff;
+      --good: #3dde8a;
+      --warn: #ffc857;
+      --bad: #ff6b7a;
+      --glow: rgba(110, 200, 255, 0.35);
+      --glow2: rgba(124, 110, 245, 0.3);
+      --radius: 16px;
+      --radius2: 22px;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --nav: rgba(7, 9, 15, 0.72);
+      --hero-glow1: rgba(110, 200, 255, 0.14);
+      --hero-glow2: rgba(124, 110, 245, 0.12);
+      --ok: #3dde8a;
+    }
+    [data-theme="light"] {
+      --bg: #f3f6fc;
+      --bg2: #ffffff;
+      --bg3: #e8eef9;
+      --card: rgba(255, 255, 255, 0.86);
+      --card2: rgba(255, 255, 255, 0.96);
+      --border: rgba(30, 60, 110, 0.12);
+      --border2: rgba(30, 60, 110, 0.22);
+      --text: #0d1526;
+      --muted: #4a5a78;
+      --faint: #7a8aa8;
+      --accent: #1678d4;
+      --accent2: #5b4fe0;
+      --accent3: #0f6fc4;
+      --neon: #0b5ea8;
+      --glow: rgba(22, 120, 212, 0.25);
+      --glow2: rgba(91, 79, 224, 0.2);
+      --nav: rgba(243, 246, 252, 0.8);
+      --hero-glow1: rgba(22, 120, 212, 0.12);
+      --hero-glow2: rgba(91, 79, 224, 0.1);
+      --shadow: 0 16px 40px rgba(20, 40, 80, 0.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0a0c12;
-      color: #e8eef8;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 48px 20px;
-    }
-    .badge {
-      display: inline-block;
-      background: rgba(120, 190, 255, 0.12);
-      color: #7ec8ff;
-      border: 1px solid rgba(120, 190, 255, 0.35);
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 13px;
-      margin-bottom: 24px;
-    }
-    h1 {
-      font-size: clamp(40px, 8vw, 72px);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #b8e6ff 0%, #7ec8ff 40%, #a78bfa 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 16px;
-      text-align: center;
-    }
-    .sub {
-      font-size: 18px;
-      color: #9aa8c0;
-      text-align: center;
-      max-width: 560px;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.6;
-      margin-bottom: 40px;
+      overflow-x: hidden;
+      min-height: 100vh;
     }
-    .panel {
-      background: rgba(8, 10, 14, 0.92);
-      border: 1px solid rgba(90, 120, 170, 0.45);
-      border-radius: 12px;
-      padding: 20px 24px;
-      width: 280px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(120, 190, 255, 0.06);
-      margin-bottom: 40px;
-      position: relative;
-      overflow: hidden;
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    ::selection { background: rgba(110, 200, 255, 0.35); color: var(--text); }
+    .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+    /* ── Loader ── */
+    #loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: grid; place-items: center;
+      transition: opacity .5s ease, visibility .5s;
     }
-    .panel::before {
-      content: '';
-      position: absolute;
-      left: 4px; top: 10px; bottom: 10px;
-      width: 3px;
-      background: #7ec8ff;
-      border-radius: 2px;
-      opacity: 0.85;
+    #loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-ring {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 3px solid var(--border2);
+      border-top-color: var(--accent);
+      animation: spin .8s linear infinite;
     }
-    .fps {
-      font-size: 32px;
-      font-weight: 700;
-      color: #b8e6ff;
-      line-height: 1;
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Progress ── */
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      z-index: 1000; box-shadow: 0 0 12px var(--glow);
+      transition: width .1s linear;
     }
-    .fps span { font-size: 11px; color: #9aa8c0; margin-left: 6px; font-weight: 400; }
-    .clock { position: absolute; right: 20px; top: 20px; color: #9aa8c0; font-size: 13px; }
-    .ft { font-size: 12px; color: #9aa8c0; margin-top: 4px; }
-    .sep { height: 1px; background: rgba(90, 120, 170, 0.5); margin: 12px 0; }
-    .row {
-      display: flex;
+
+    /* ── Background FX ── */
+    .bg-fx {
+      position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden;
+    }
+    .bg-fx .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: .55;
+      animation: float 18s ease-in-out infinite;
+    }
+    .bg-fx .orb1 { width: 480px; height: 480px; background: var(--hero-glow1); top: -120px; left: -80px; }
+    .bg-fx .orb2 { width: 420px; height: 420px; background: var(--hero-glow2); top: 30%; right: -120px; animation-delay: -6s; }
+    .bg-fx .orb3 { width: 360px; height: 360px; background: var(--hero-glow1); bottom: -80px; left: 35%; animation-delay: -12s; }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -40px) scale(1.05); }
+      66% { transform: translate(-20px, 25px) scale(.96); }
+    }
+    .grid-lines {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 75%);
+      opacity: .5;
+    }
+
+    /* ── Nav ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      background: var(--nav);
+      border-bottom: 1px solid transparent;
+      transition: border-color .3s, box-shadow .3s, background .3s;
+    }
+    .nav.scrolled {
+      border-bottom-color: var(--border);
+      box-shadow: 0 8px 32px rgba(0,0,0,.18);
+    }
+    .nav-inner {
+      max-width: 1180px; margin: 0 auto;
+      padding: 14px 22px;
+      display: flex; align-items: center; gap: 18px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em;
+    }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent2));
+      display: grid; place-items: center;
+      color: #fff; font-size: .78rem; font-weight: 800;
+      box-shadow: 0 4px 16px var(--glow);
+    }
+    .nav-links {
+      display: flex; gap: 4px; margin-left: auto;
       align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      margin-bottom: 8px;
-      color: #e8eef8;
     }
-    .row .lbl { width: 36px; color: #9aa8c0; font-size: 10px; }
-    .row .val { width: 48px; font-weight: 600; }
-    .bar {
-      flex: 1;
-      height: 6px;
-      background: rgba(30, 40, 55, 0.9);
-      border-radius: 3px;
-      overflow: hidden;
+    .nav-links a {
+      padding: 8px 14px; border-radius: 10px;
+      font-size: .9rem; font-weight: 500; color: var(--muted);
+      transition: color .2s, background .2s;
     }
-    .bar i {
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, #78beff, #5aa8f0);
-      border-radius: 3px;
+    .nav-links a:hover { color: var(--text); background: var(--border); }
+    .nav-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 12px;
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      color: var(--muted); transition: all .2s;
+      background: var(--card);
     }
-    .status { font-size: 10px; color: #a0aec0; margin-top: 14px; }
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 14px;
-      width: 100%;
-      max-width: 720px;
-      margin-bottom: 40px;
+    .icon-btn:hover { color: var(--text); border-color: var(--border2); transform: translateY(-1px); }
+    .burger { display: none; }
+    .burger span {
+      display: block; width: 18px; height: 2px; background: var(--text);
+      margin: 3px auto; border-radius: 2px; transition: .3s;
     }
-    .card {
-      background: rgba(18, 22, 32, 0.9);
-      border: 1px solid rgba(90, 120, 170, 0.3);
-      border-radius: 12px;
-      padding: 18px 16px;
-      transition: border-color 0.2s, transform 0.2s;
+    .burger.open span:nth-child(1) { transform: translateY(5px) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; }
+    .burger.open span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      position: fixed; top: 64px; left: 0; right: 0; bottom: 0;
+      background: var(--bg); z-index: 99;
+      padding: 24px;
+      flex-direction: column; gap: 6px;
+      transform: translateX(100%);
+      transition: transform .3s ease;
     }
-    .card:hover {
-      border-color: rgba(126, 200, 255, 0.55);
-      transform: translateY(-2px);
+    .mobile-menu.open { transform: translateX(0); }
+    .mobile-menu a {
+      padding: 16px 18px; border-radius: 14px;
+      font-size: 1.05rem; font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--card);
     }
-    .card .icon { font-size: 22px; margin-bottom: 8px; }
-    .card h3 { font-size: 14px; margin-bottom: 6px; color: #e8eef8; }
-    .card p { font-size: 12px; color: #9aa8c0; line-height: 1.5; }
-    .cta {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 32px;
-    }
+    .mobile-menu a:active { background: var(--bg3); }
+
+    /* ── Buttons ── */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: transform 0.15s, box-shadow 0.15s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 26px; border-radius: 14px;
+      font-weight: 600; font-size: .95rem;
+      transition: transform .15s, box-shadow .2s, background .2s, border-color .2s;
+      position: relative; overflow: hidden;
     }
-    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: scale(.97); }
     .btn-primary {
-      background: linear-gradient(135deg, #3d8fd4, #5b6ef5);
+      background: linear-gradient(135deg, var(--accent3), var(--accent2));
       color: #fff;
-      box-shadow: 0 8px 24px rgba(90, 110, 245, 0.35);
+      box-shadow: 0 8px 28px var(--glow2), inset 0 1px 0 rgba(255,255,255,.2);
     }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px var(--glow2); }
+    .btn-secondary {
+      background: var(--card2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      backdrop-filter: blur(8px);
+    }
+    .btn-secondary:hover { border-color: var(--accent); transform: translateY(-2px); }
     .btn-ghost {
-      background: transparent;
-      color: #7ec8ff;
-      border: 1px solid rgba(126, 200, 255, 0.4);
+      color: var(--accent);
+      border: 1px solid transparent;
     }
-    .keys {
-      background: rgba(18, 22, 32, 0.9);
-      border: 1px solid rgba(90, 120, 170, 0.3);
-      border-radius: 12px;
-      padding: 20px 28px;
-      max-width: 520px;
-      width: 100%;
-      margin-bottom: 40px;
+    .btn-ghost:hover { background: rgba(110, 200, 255, .1); border-color: var(--border2); }
+    .btn-sm { padding: 9px 16px; font-size: .85rem; border-radius: 11px; }
+    .btn .kbd {
+      font-family: "JetBrains Mono", monospace; font-size: .75rem;
+      background: rgba(0,0,0,.25); padding: 2px 7px; border-radius: 6px;
     }
-    .keys h2 { font-size: 14px; color: #7ec8ff; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
-    .keys table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .keys td { padding: 8px 0; border-bottom: 1px solid rgba(90, 120, 170, 0.15); }
-    .keys td:first-child { color: #b8e6ff; font-family: Consolas, monospace; width: 55%; }
-    .keys td:last-child { color: #9aa8c0; text-align: right; }
-    .keys tr:last-child td { border-bottom: none; }
-    footer {
-      color: #5a6a84;
-      font-size: 13px;
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 110px 22px 60px;
+      position: relative;
+    }
+    .hero-inner {
+      max-width: 1180px; margin: 0 auto; width: 100%;
+      display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px;
+      align-items: center;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 999px;
+      font-size: .78rem; font-weight: 600;
+      background: rgba(110, 200, 255, .1);
+      border: 1px solid rgba(110, 200, 255, .28);
+      color: var(--accent);
+    }
+    .pill.green { background: rgba(61, 222, 138, .1); border-color: rgba(61, 222, 138, .3); color: var(--good); }
+    .pill.purple { background: rgba(124, 110, 245, .12); border-color: rgba(124, 110, 245, .32); color: #a89bff; }
+    [data-theme="light"] .pill.purple { color: #4b3fd4; }
+
+    h1.hero-title {
+      font-size: clamp(2.6rem, 6vw, 4.2rem);
+      font-weight: 900; letter-spacing: -0.04em;
+      line-height: 1.05; margin-bottom: 18px;
+    }
+    .grad {
+      background: linear-gradient(135deg, var(--neon) 0%, var(--accent) 45%, var(--accent2) 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      color: var(--muted); max-width: 520px;
+      margin-bottom: 30px; line-height: 1.7;
+    }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 36px; }
+    .hero-stats {
+      display: flex; gap: 28px; flex-wrap: wrap;
+      padding-top: 8px;
+    }
+    .stat b {
+      display: block; font-size: 1.55rem; font-weight: 800;
+      letter-spacing: -0.03em; color: var(--text);
+    }
+    .stat span { font-size: .8rem; color: var(--faint); font-weight: 500; }
+
+    /* ── Overlay demo ── */
+    .demo-wrap {
+      position: relative;
+      display: flex; justify-content: center;
+    }
+    .demo-glow {
+      position: absolute; inset: -30px;
+      background: radial-gradient(circle at 50% 40%, var(--glow), transparent 65%);
+      filter: blur(20px); z-index: 0;
+    }
+    .overlay-panel {
+      position: relative; z-index: 1;
+      width: min(300px, 100%);
+      background: rgba(8, 10, 14, 0.92);
+      border: 1px solid rgba(90, 120, 170, 0.4);
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow), 0 0 50px rgba(110, 200, 255, 0.08);
+      backdrop-filter: blur(12px);
+      animation: panelIn .7s cubic-bezier(.2,.8,.2,1) both;
+      overflow: hidden;
+    }
+    .overlay-panel::before {
+      content: ''; position: absolute; left: 5px; top: 12px; bottom: 12px;
+      width: 3px; border-radius: 3px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 10px var(--glow);
+    }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(24px) scale(.96); }
+      to { opacity: 1; transform: none; }
+    }
+    .op-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+    .op-fps {
+      font-size: 2rem; font-weight: 800; color: var(--neon);
+      line-height: 1; letter-spacing: -0.03em;
+      text-shadow: 0 0 20px rgba(184, 230, 255, .4);
+    }
+    .op-fps small { font-size: .7rem; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: .06em; }
+    .op-clock { font-size: .8rem; color: var(--muted); font-family: "JetBrains Mono", monospace; }
+    .op-ft { font-size: .75rem; color: var(--muted); margin-bottom: 10px; font-family: "JetBrains Mono", monospace; }
+    .op-sep { height: 1px; background: rgba(90,120,170,.45); margin: 8px 0 12px; }
+    .op-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .78rem; margin-bottom: 9px;
+    }
+    .op-lbl { width: 38px; color: var(--muted); font-size: .68rem; font-weight: 600; letter-spacing: .04em; }
+    .op-val { width: 52px; font-weight: 700; font-family: "JetBrains Mono", monospace; font-size: .75rem; }
+    .op-bar {
+      flex: 1; height: 7px; border-radius: 99px;
+      background: rgba(30, 40, 55, .95); overflow: hidden;
+    }
+    .op-bar i {
+      display: block; height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 8px var(--glow);
+    }
+    .op-bar i.warm { background: linear-gradient(90deg, var(--warn), #ff9a3d); box-shadow: 0 0 8px rgba(255,200,87,.4); }
+    .op-bar i.hot { background: linear-gradient(90deg, var(--bad), #ff4d6a); box-shadow: 0 0 8px rgba(255,107,122,.4); }
+    .op-status {
+      margin-top: 12px; font-size: .65rem; color: var(--faint);
+      font-family: "JetBrains Mono", monospace;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .demo-controls {
+      display: flex; gap: 8px; justify-content: center; margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      padding: 7px 14px; border-radius: 999px; font-size: .78rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--card); color: var(--muted);
+      transition: all .2s;
+    }
+    .chip:hover, .chip.active {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(110, 200, 255, .1);
+    }
+
+    /* ── Sections ── */
+    section { padding: 88px 22px; position: relative; }
+    .container { max-width: 1180px; margin: 0 auto; }
+    .section-head { text-align: center; max-width: 640px; margin: 0 auto 48px; }
+    .section-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .78rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 14px;
+    }
+    .section-tag::before {
+      content: ''; width: 18px; height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      border-radius: 2px;
+    }
+    h2.section-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800; letter-spacing: -0.03em;
+      line-height: 1.15; margin-bottom: 14px;
+    }
+    .section-desc { color: var(--muted); font-size: 1.02rem; line-height: 1.7; }
+
+    /* reveal */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-d1 { transition-delay: .08s; }
+    .reveal-d2 { transition-delay: .16s; }
+    .reveal-d3 { transition-delay: .24s; }
+    .reveal-d4 { transition-delay: .32s; }
+    .reveal-d5 { transition-delay: .4s; }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .feature {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 26px 24px;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      position: relative; overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+    .feature::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0; transition: opacity .3s;
+    }
+    .feature:hover {
+      transform: translateY(-6px);
+      border-color: var(--border2);
+      box-shadow: var(--shadow);
+    }
+    .feature:hover::after { opacity: 1; }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 1.35rem; margin-bottom: 16px;
+      background: linear-gradient(135deg, rgba(110,200,255,.15), rgba(124,110,245,.15));
+      border: 1px solid var(--border2);
+    }
+    .feature h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+    .feature p { font-size: .9rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── Spec strip ── */
+    .spec-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-top: 40px;
+    }
+    .spec {
+      text-align: center; padding: 22px 12px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .spec b { display: block; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; }
+    .spec span { font-size: .78rem; color: var(--faint); font-weight: 500; }
+
+    /* ── How it works ── */
+    .steps {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+      counter-reset: step;
+    }
+    .step {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius2); padding: 28px 24px;
+      position: relative; counter-increment: step;
+    }
+    .step::before {
+      content: counter(step, decimal-leading-zero);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 2.4rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      display: block; margin-bottom: 14px; line-height: 1;
+    }
+    .step h3 { font-size: 1.1rem; margin-bottom: 8px; font-weight: 700; }
+    .step p { color: var(--muted); font-size: .92rem; }
+
+    /* ── Hotkeys ── */
+    .keys-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;
+    }
+    .key-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 18px 20px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color .2s, transform .2s;
+      cursor: pointer;
+    }
+    .key-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .key-card .desc { font-weight: 600; font-size: .95rem; }
+    .key-card .hint { font-size: .78rem; color: var(--faint); margin-top: 2px; }
+    .keys-combo {
+      display: flex; gap: 5px; flex-shrink: 0;
+    }
+    .keys-combo kbd {
+      font-family: "JetBrains Mono", monospace; font-size: .78rem;
+      padding: 6px 10px; border-radius: 8px;
+      background: var(--bg3); border: 1px solid var(--border2);
+      box-shadow: 0 2px 0 var(--border2);
+      color: var(--text); font-weight: 600;
+    }
+
+    /* ── Settings preview ── */
+    .settings-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px;
+    }
+    .set-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius2); padding: 24px;
+      backdrop-filter: blur(10px);
+    }
+    .set-card h3 {
+      font-size: .95rem; font-weight: 700; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+      font-size: .9rem;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .switch {
+      position: relative; width: 44px; height: 26px;
+      background: var(--bg3); border-radius: 99px;
+      border: 1px solid var(--border2); transition: .25s;
+      flex-shrink: 0;
+    }
+    .switch::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--muted); transition: .25s;
+    }
+    .switch.on {
+      background: rgba(110, 200, 255, .25);
+      border-color: var(--accent);
+    }
+    .switch.on::after {
+      left: 21px; background: var(--accent);
+      box-shadow: 0 0 8px var(--glow);
+    }
+    .slider-row { margin-top: 14px; }
+    .slider-row label {
+      display: flex; justify-content: space-between;
+      font-size: .85rem; color: var(--muted); margin-bottom: 10px;
+    }
+    .slider-row label b { color: var(--accent); font-family: "JetBrains Mono", monospace; }
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 6px;
+      border-radius: 99px; background: var(--bg3);
+      outline: none; border: 1px solid var(--border);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 12px var(--glow);
+      cursor: pointer; border: 2px solid #fff;
+    }
+    .corner-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .corner-btn {
+      padding: 12px; border-radius: 12px; font-size: .8rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--bg3); color: var(--muted);
+      transition: .2s;
+    }
+    .corner-btn:hover, .corner-btn.active {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(110, 200, 255, .1);
+    }
+
+    /* ── Download ── */
+    .download-box {
+      background: linear-gradient(145deg, var(--card2), var(--card));
+      border: 1px solid var(--border2);
+      border-radius: 28px;
+      padding: clamp(32px, 6vw, 56px);
       text-align: center;
-      margin-top: auto;
-      padding-top: 24px;
+      position: relative; overflow: hidden;
+      box-shadow: var(--shadow);
     }
-    footer b { color: #9aa8c0; }
+    .download-box::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 30%, var(--hero-glow1), transparent 45%),
+                  radial-gradient(circle at 70% 70%, var(--hero-glow2), transparent 45%);
+      pointer-events: none;
+    }
+    .download-box > * { position: relative; z-index: 1; }
+    .download-box h2 { font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+    .download-box p { color: var(--muted); margin-bottom: 28px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .dl-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+    .dl-meta {
+      display: flex; gap: 18px; justify-content: center; flex-wrap: wrap;
+      font-size: .8rem; color: var(--faint);
+    }
+    .dl-meta span { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* ── FAQ ── */
+    .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    .faq-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      transition: border-color .2s;
+    }
+    .faq-item.open { border-color: var(--border2); }
+    .faq-q {
+      width: 100%; text-align: left; padding: 18px 20px;
+      display: flex; justify-content: space-between; align-items: center; gap: 14px;
+      font-weight: 600; font-size: .98rem;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-q .chev {
+      width: 28px; height: 28px; border-radius: 8px;
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      transition: transform .3s, background .2s;
+      flex-shrink: 0; font-size: .8rem; color: var(--muted);
+    }
+    .faq-item.open .chev { transform: rotate(180deg); background: rgba(110,200,255,.1); color: var(--accent); }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      transition: max-height .35s ease, padding .35s ease;
+      padding: 0 20px;
+      color: var(--muted); font-size: .92rem; line-height: 1.7;
+    }
+    .faq-item.open .faq-a { max-height: 240px; padding: 0 20px 18px; }
+
+    /* ── Tech ── */
+    .tech-row {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    }
+    .tech-chip {
+      padding: 10px 16px; border-radius: 12px;
+      background: var(--card); border: 1px solid var(--border);
+      font-size: .85rem; font-weight: 600; color: var(--muted);
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: .2s;
+    }
+    .tech-chip:hover { border-color: var(--accent); color: var(--text); transform: translateY(-2px); }
+    .tech-chip .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 8px var(--glow);
+    }
+
+    /* ── Changelog ── */
+    .changelog { max-width: 720px; margin: 0 auto; }
+    .cl-item {
+      display: grid; grid-template-columns: 90px 1fr; gap: 18px;
+      padding: 20px 0; border-bottom: 1px solid var(--border);
+    }
+    .cl-item:last-child { border-bottom: none; }
+    .cl-ver {
+      font-family: "JetBrains Mono", monospace; font-weight: 700;
+      color: var(--accent); font-size: .9rem;
+    }
+    .cl-item h4 { font-size: 1rem; margin-bottom: 6px; }
+    .cl-item p { color: var(--muted); font-size: .9rem; }
+    .cl-item ul { color: var(--muted); font-size: .88rem; padding-left: 18px; margin-top: 6px; }
+    .cl-item li { margin-bottom: 4px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--card2); border: 1px solid var(--border2);
+      color: var(--text); padding: 12px 22px; border-radius: 999px;
+      font-size: .9rem; font-weight: 600; z-index: 200;
+      backdrop-filter: blur(12px); box-shadow: var(--shadow);
+      opacity: 0; transition: .35s cubic-bezier(.2,.8,.2,1);
+      pointer-events: none; display: flex; align-items: center; gap: 8px;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 22px 32px;
+      background: var(--bg2);
+    }
+    .footer-inner {
+      max-width: 1180px; margin: 0 auto;
+      display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px;
+    }
+    .footer-brand p { color: var(--muted); font-size: .9rem; margin-top: 12px; max-width: 280px; line-height: 1.65; }
+    .footer-col h4 {
+      font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--faint); margin-bottom: 14px; font-weight: 700;
+    }
+    .footer-col a {
+      display: block; padding: 5px 0; font-size: .9rem; color: var(--muted);
+      transition: color .2s;
+    }
+    .footer-col a:hover { color: var(--accent); }
+    .footer-bottom {
+      max-width: 1180px; margin: 36px auto 0; padding-top: 22px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+      font-size: .82rem; color: var(--faint);
+    }
+
+    /* ── Cursor glow (desktop) ── */
+    #cursor-glow {
+      position: fixed; width: 280px; height: 280px; border-radius: 50%;
+      background: radial-gradient(circle, var(--glow), transparent 65%);
+      pointer-events: none; z-index: 0; opacity: .45;
+      transform: translate(-50%, -50%);
+      transition: opacity .4s;
+      mix-blend-mode: screen;
+      display: none;
+    }
+    @media (pointer: fine) { #cursor-glow { display: block; } }
+    [data-theme="light"] #cursor-glow { mix-blend-mode: multiply; opacity: .2; }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+      .hero-sub { margin-left: auto; margin-right: auto; }
+      .hero-cta, .badge-row, .hero-stats { justify-content: center; }
+      .steps { grid-template-columns: 1fr; }
+      .spec-strip { grid-template-columns: repeat(2, 1fr); }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+      .burger { display: block; }
+      .mobile-menu { display: flex; }
+      .demo-wrap { order: -1; }
+    }
+    @media (max-width: 560px) {
+      .footer-inner { grid-template-columns: 1fr; }
+      .spec-strip { grid-template-columns: 1fr 1fr; }
+      .keys-combo kbd { font-size: .68rem; padding: 5px 7px; }
+      section { padding: 64px 18px; }
+      .hero { padding-top: 100px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+      html { scroll-behavior: auto; }
+    }
   </style>
 </head>
 <body>
-  <div class="badge">⚡ Windows 10/11 · Русский интерфейс · MIT</div>
+  <div id="loader"><div class="loader-ring"></div></div>
+  <div id="progress"></div>
+  <div id="cursor-glow"></div>
 
-  <h1>FramePulse</h1>
-  <p class="sub">
-    Лёгкий игровой оверлей с настоящей прозрачностью.
-    FPS, время кадра, ЦП, ГП и память — поверх любой игры.
-  </p>
-
-  <div class="panel">
-    <div class="fps">144 <span>FPS</span></div>
-    <div class="clock">18:42</div>
-    <div class="ft">6.9 ms&nbsp;&nbsp;low1 12</div>
-    <div class="sep"></div>
-    <div class="row"><span class="lbl">ЦП</span><span class="val">34%</span><div class="bar"><i style="width:34%"></i></div></div>
-    <div class="row"><span class="lbl">ГП</span><span class="val">71%</span><div class="bar"><i style="width:71%;background:linear-gradient(90deg,#ffd250,#ff9a3d)"></i></div></div>
-    <div class="row"><span class="lbl">ТЕМП</span><span class="val">72°C</span></div>
-    <div class="row"><span class="lbl">ГП</span><span class="val">5.2/8.0</span></div>
-    <div class="row"><span class="lbl">ОЗУ</span><span class="val">12.4/32</span></div>
-    <div class="status">VALORANT-Win64-Shipping.exe</div>
+  <div class="bg-fx" aria-hidden="true">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="grid-lines"></div>
   </div>
 
-  <div class="features">
-    <div class="card"><div class="icon">🎯</div><h3>FPS и low 1%</h3><p>Точный замер через PresentMon в реальном времени</p></div>
-    <div class="card"><div class="icon">🖥</div><h3>ЦП и ГП</h3><p>Полоски загрузки с цветовой индикацией</p></div>
-    <div class="card"><div class="icon">🌡</div><h3>Температура</h3><p>NVIDIA NVML: норма, тепло, перегрев</p></div>
-    <div class="card"><div class="icon">💾</div><h3>Память</h3><p>Видеопамять и ОЗУ в одном месте</p></div>
-    <div class="card"><div class="icon">🎛</div><h3>Настройки</h3><p>Живое применение: строки, прозрачность, угол</p></div>
-    <div class="card"><div class="icon">📌</div><h3>Прозрачность</h3><p>Настоящий alpha-оверлей без белых краёв</p></div>
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <span class="logo-mark">FP</span>
+        FramePulse
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Возможности</a>
+        <a href="#how">Как работает</a>
+        <a href="#settings">Настройки</a>
+        <a href="#keys">Клавиши</a>
+        <a href="#faq">FAQ</a>
+        <a href="#download" class="btn btn-primary btn-sm" style="margin-left:6px">Скачать</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" id="themeBtn" title="Тема" aria-label="Переключить тему">
+          <span id="themeIcon">☾</span>
+        </button>
+        <a class="icon-btn" href="https://github.com/R3G1ST/FramePulse" title="GitHub" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.89-.01 3.29 0 .32.22.7.82.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        </a>
+        <button class="icon-btn burger" id="burger" aria-label="Меню">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features">Возможности</a>
+    <a href="#how">Как работает</a>
+    <a href="#settings">Настройки</a>
+    <a href="#keys">Горячие клавиши</a>
+    <a href="#faq">FAQ</a>
+    <a href="#download" class="btn btn-primary" style="margin-top:12px; justify-content:center">Скачать FramePulse</a>
+    <a href="https://github.com/R3G1ST/FramePulse" class="btn btn-secondary" style="justify-content:center">Исходный код</a>
   </div>
 
-  <div class="cta">
-    <a class="btn btn-primary" href="https://github.com/R3G1ST/FramePulse/releases">⬇️ Скачать FramePulse</a>
-    <a class="btn btn-ghost" href="https://github.com/R3G1ST/FramePulse">📦 Исходный код</a>
-  </div>
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <div>
+        <div class="badge-row reveal">
+          <span class="pill">⚡ v1.0.0</span>
+          <span class="pill green">● Бесплатно · MIT</span>
+          <span class="pill purple">🇷🇺 Русский UI</span>
+        </div>
+        <h1 class="hero-title reveal reveal-d1">
+          Игровой оверлей<br>
+          <span class="grad">без компромиссов</span>
+        </h1>
+        <p class="hero-sub reveal reveal-d2">
+          FPS, low&nbsp;1%, время кадра, ЦП, ГП, температура и память —
+          прямо поверх игры. Настоящая прозрачность, нулевой оверхед,
+          русский интерфейс.
+        </p>
+        <div class="hero-cta reveal reveal-d3">
+          <a class="btn btn-primary" href="https://github.com/R3G1ST/FramePulse/releases/download/v1.0.0/FramePulse-Setup.exe">
+            ⬇ Скачать установщик
+            <span class="kbd">2.3 MB</span>
+          </a>
+          <a class="btn btn-secondary" href="https://github.com/R3G1ST/FramePulse">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.89-.01 3.29 0 .32.22.7.82.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            GitHub
+          </a>
+        </div>
+        <div class="hero-stats reveal reveal-d4">
+          <div class="stat"><b data-count="0.0">0.0</b><span>% CPU overhead</span></div>
+          <div class="stat"><b data-count="12">0</b><span>метрик в реальном времени</span></div>
+          <div class="stat"><b data-count="3">0</b><span>горячие клавиши</span></div>
+        </div>
+      </div>
 
-  <div class="keys">
-    <h2>Горячие клавиши</h2>
-    <table>
-      <tr><td>Ctrl + Shift + F10</td><td>Скрыть / показать</td></tr>
-      <tr><td>Ctrl + Shift + F11</td><td>Следующий монитор</td></tr>
-      <tr><td>Ctrl + Shift + F12</td><td>Перетаскивание</td></tr>
-      <tr><td>Esc</td><td>Выйти из режима перетаскивания</td></tr>
-    </table>
-  </div>
+      <div class="demo-wrap reveal reveal-d2">
+        <div class="demo-glow"></div>
+        <div class="overlay-panel" id="demoPanel">
+          <div class="op-head">
+            <div class="op-fps"><span id="dFps">144</span><small>FPS</small></div>
+            <div class="op-clock" id="dClock">18:42</div>
+          </div>
+          <div class="op-ft"><span id="dFt">6.9</span> ms &nbsp;·&nbsp; low1 <span id="dLow">12</span></div>
+          <div class="op-sep"></div>
+          <div class="op-row">
+            <span class="op-lbl">ЦП</span>
+            <span class="op-val" id="dCpuV">34%</span>
+            <div class="op-bar"><i id="dCpu" style="width:34%"></i></div>
+          </div>
+          <div class="op-row">
+            <span class="op-lbl">ГП</span>
+            <span class="op-val" id="dGpuV">71%</span>
+            <div class="op-bar"><i id="dGpu" style="width:71%"></i></div>
+          </div>
+          <div class="op-row">
+            <span class="op-lbl">ТЕМП</span>
+            <span class="op-val" id="dTemp">72°C</span>
+          </div>
+          <div class="op-row">
+            <span class="op-lbl">ГП</span>
+            <span class="op-val" id="dVram">5.2/8</span>
+          </div>
+          <div class="op-row">
+            <span class="op-lbl">ОЗУ</span>
+            <span class="op-val" id="dRam">12/32</span>
+          </div>
+          <div class="op-status" id="dStatus">VALORANT-Win64-Shipping.exe</div>
+        </div>
+        <div class="demo-controls">
+          <button class="chip active" data-proc="VALORANT-Win64-Shipping.exe">Valorant</button>
+          <button class="chip" data-proc="cs2.exe">CS2</button>
+          <button class="chip" data-proc="Cyberpunk2077.exe">Cyberpunk</button>
+          <button class="chip" data-proc="">Активное окно</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <footer>Сделано с ❤️ для геймеров · <b>FramePulse</b> v1.0.0</footer>
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-tag">Возможности</div>
+        <h2 class="section-title">Всё, что нужно<br><span class="grad">в бою</span></h2>
+        <p class="section-desc">Шесть блоков данных, живое обновление, минимальное влияние на FPS.</p>
+      </div>
+      <div class="features-grid">
+        <article class="feature reveal">
+          <div class="feature-icon">🎯</div>
+          <h3>FPS и low 1%</h3>
+          <p>Точный замер кадров через Intel PresentMon — без накладных расходов на рендер.</p>
+        </article>
+        <article class="feature reveal reveal-d1">
+          <div class="feature-icon">⏱</div>
+          <h3>Время кадра</h3>
+          <p>Стабильность в миллисекундах и low1 — видно фризы до того, как они мешают.</p>
+        </article>
+        <article class="feature reveal reveal-d2">
+          <div class="feature-icon">🖥</div>
+          <h3>ЦП и ГП</h3>
+          <p>Полоски загрузки с цветовой индикацией: спокойно → тепло → перегрузка.</p>
+        </article>
+        <article class="feature reveal reveal-d3">
+          <div class="feature-icon">🌡</div>
+          <h3>Температура ГП</h3>
+          <p>NVIDIA NVML в реальном времени. 75°C — предупреждение, 85°C — тревога.</p>
+        </article>
+        <article class="feature reveal reveal-d4">
+          <div class="feature-icon">💾</div>
+          <h3>Память</h3>
+          <p>Видеопамять и ОЗУ: сколько занято, сколько свободно, хватит ли на текстуры.</p>
+        </article>
+        <article class="feature reveal reveal-d5">
+          <div class="feature-icon">📌</div>
+          <h3>Настоящая прозрачность</h3>
+          <p>Per-pixel alpha через UpdateLayeredWindow. Без белых краёв и без «мыла».</p>
+        </article>
+      </div>
+
+      <div class="spec-strip reveal">
+        <div class="spec"><b>&lt;1%</b><span>влияние на FPS</span></div>
+        <div class="spec"><b>2×</b><span>монитора</span></div>
+        <div class="spec"><b>500мс</b><span>обновление UI</span></div>
+        <div class="spec"><b>0</b><span>зависимостей</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section id="how" style="background: var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-tag">Установка</div>
+        <h2 class="section-title">Три шага — и<br><span class="grad">в игре</span></h2>
+        <p class="section-desc">Без аккаунтов, без телеметрии, без лишних окон.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <h3>Скачайте</h3>
+          <p>Один файл <span class="mono">FramePulse-Setup.exe</span> (~2.3&nbsp;MB). От администратора — для глобальных хоткеев.</p>
+        </div>
+        <div class="step reveal reveal-d1">
+          <h3>Запустите</h3>
+          <p>Оверлей сразу в трее. Настройки — ПКМ по иконке → «Настройки…». Всё применяется live.</p>
+        </div>
+        <div class="step reveal reveal-d2">
+          <h3>Играйте</h3>
+          <p>FPS, ЦП, ГП и память поверх окна. Перетаскивание — <span class="mono">Ctrl+Shift+F12</span>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-tag">Контроль</div>
+        <h2 class="section-title">Настройки<br><span class="grad">в реальном времени</span></h2>
+        <p class="section-desc">Попробуй переключатели ниже — так же мгновенно работает и в приложении.</p>
+      </div>
+      <div class="settings-grid">
+        <div class="set-card reveal">
+          <h3>👁 Отображение</h3>
+          <div class="toggle-row"><span>FPS счётчик</span><button class="switch on" data-toggle aria-label="FPS"></button></div>
+          <div class="toggle-row"><span>Время кадра</span><button class="switch on" data-toggle aria-label="Frame time"></button></div>
+          <div class="toggle-row"><span>Загрузка ЦП</span><button class="switch on" data-toggle aria-label="CPU"></button></div>
+          <div class="toggle-row"><span>Загрузка ГП</span><button class="switch on" data-toggle aria-label="GPU"></button></div>
+          <div class="toggle-row"><span>Температура</span><button class="switch on" data-toggle aria-label="Temp"></button></div>
+          <div class="toggle-row"><span>Память</span><button class="switch on" data-toggle aria-label="RAM"></button></div>
+        </div>
+        <div class="set-card reveal reveal-d1">
+          <h3>◐ Прозрачность</h3>
+          <div class="slider-row">
+            <label>Фон панели <b id="opVal">63</b></label>
+            <input type="range" min="50" max="255" value="63" id="opacityRange" aria-label="Прозрачность">
+          </div>
+          <div style="margin-top:22px; padding:18px; border-radius:14px; background:var(--bg3); border:1px solid var(--border);">
+            <div style="font-size:.8rem; color:var(--faint); margin-bottom:10px;">Превью</div>
+            <div id="opPreview" style="height:64px; border-radius:12px; background:rgba(8,10,14,.63); border:1px solid rgba(90,120,170,.5); display:flex; align-items:center; padding:0 16px; gap:12px; transition:background .15s;">
+              <span style="font-weight:800; color:var(--neon); font-family:JetBrains Mono,monospace;">144</span>
+              <span style="font-size:.75rem; color:var(--muted);">FPS · live preview</span>
+            </div>
+          </div>
+        </div>
+        <div class="set-card reveal reveal-d2">
+          <h3>▣ Позиция</h3>
+          <div class="corner-grid">
+            <button class="corner-btn" data-corner="tl">Слева сверху</button>
+            <button class="corner-btn" data-corner="tr">Справа сверху</button>
+            <button class="corner-btn active" data-corner="bl">Слева снизу</button>
+            <button class="corner-btn" data-corner="br">Справа снизу</button>
+          </div>
+          <div class="toggle-row" style="margin-top:14px; border-top:1px solid var(--border); padding-top:14px;">
+            <span>Свободное перемещение</span>
+            <button class="switch" data-toggle aria-label="Drag"></button>
+          </div>
+          <div class="toggle-row">
+            <span>Автозапуск с Windows</span>
+            <button class="switch" data-toggle aria-label="Startup"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOTKEYS -->
+  <section id="keys" style="background: var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-tag">Управление</div>
+        <h2 class="section-title">Горячие клавиши</h2>
+        <p class="section-desc">Нажми на карточку — скопируется комбинация.</p>
+      </div>
+      <div class="keys-grid">
+        <div class="key-card reveal" data-copy="Ctrl+Shift+F10">
+          <div>
+            <div class="desc">Скрыть / показать</div>
+            <div class="hint">Мгновенно, из любой игры</div>
+          </div>
+          <div class="keys-combo"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>F10</kbd></div>
+        </div>
+        <div class="key-card reveal reveal-d1" data-copy="Ctrl+Shift+F11">
+          <div>
+            <div class="desc">Следующий монитор</div>
+            <div class="hint">Циклически по всем дисплеям</div>
+          </div>
+          <div class="keys-combo"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>F11</kbd></div>
+        </div>
+        <div class="key-card reveal reveal-d2" data-copy="Ctrl+Shift+F12">
+          <div>
+            <div class="desc">Режим перетаскивания</div>
+            <div class="hint">Esc — выйти</div>
+          </div>
+          <div class="keys-combo"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>F12</kbd></div>
+        </div>
+        <div class="key-card reveal reveal-d3" data-copy="Esc">
+          <div>
+            <div class="desc">Отмена перемещения</div>
+            <div class="hint">Вернуть клик-through</div>
+          </div>
+          <div class="keys-combo"><kbd>Esc</kbd></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH -->
+  <section id="tech">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-tag">Стек</div>
+        <h2 class="section-title">Под капотом</h2>
+        <p class="section-desc">Чистый C# без тяжёлых фреймворков — быстрый старт, малый footprint.</p>
+      </div>
+      <div class="tech-row reveal">
+        <span class="tech-chip"><span class="dot"></span>C# / .NET Framework</span>
+        <span class="tech-chip"><span class="dot"></span>GDI+ layered window</span>
+        <span class="tech-chip"><span class="dot"></span>UpdateLayeredWindow</span>
+        <span class="tech-chip"><span class="dot"></span>Intel PresentMon</span>
+        <span class="tech-chip"><span class="dot"></span>NVIDIA NVML</span>
+        <span class="tech-chip"><span class="dot"></span>Win32 API</span>
+        <span class="tech-chip"><span class="dot"></span>Inno Setup</span>
+        <span class="tech-chip"><span class="dot"></span>PerMonitorV2 DPI</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHANGELOG -->
+  <section id="changelog" style="background: var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-tag">Обновления</div>
+        <h2 class="section-title">Changelog</h2>
+      </div>
+      <div class="changelog reveal">
+        <div class="cl-item">
+          <div class="cl-ver">v1.0.0</div>
+          <div>
+            <h4>Первый стабильный релиз</h4>
+            <ul>
+              <li>FPS / low1 / frame time через PresentMon</li>
+              <li>ЦП, ГП, температура, VRAM, ОЗУ</li>
+              <li>Настоящая per-pixel прозрачность</li>
+              <li>Окно настроек с live-применением</li>
+              <li>Горячие клавиши, мульти-монитор, drag</li>
+              <li>Установщик, автозапуск, русский UI</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-tag">Вопросы</div>
+        <h2 class="section-title">FAQ</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item reveal">
+          <button class="faq-q">Почему оверлей не видно в игре?<span class="chev">▾</span></button>
+          <div class="faq-a">Эксклюзивный fullscreen often «перекрывает» overlay-окна. Переключи игру в <b>оконный</b> или <b>безрамочный (borderless)</b> режим — тогда FramePulse будет поверх.</div>
+        </div>
+        <div class="faq-item reveal reveal-d1">
+          <button class="faq-q">Есть ли нагрузка на систему?<span class="chev">▾</span></button>
+          <div class="faq-a">Оверлей перерисовывается раз в 500&nbsp;мс и почти не ест CPU/GPU. PresentMon работает отдельным лёгким процессом. Влияние на FPS — менее&nbsp;1%.</div>
+        </div>
+        <div class="faq-item reveal reveal-d2">
+          <button class="faq-q">Как выбрать процесс для FPS?<span class="chev">▾</span></button>
+          <div class="faq-a">Настройки → поле «Процесс». Пусто = активное окно (авто). Либо впиши имя: <span class="mono">cs2.exe</span>, <span class="mono">VALORANT-Win64-Shipping.exe</span> и т.д. После смены — «Перезапустить PresentMon».</div>
+        </div>
+        <div class="faq-item reveal reveal-d3">
+          <button class="faq-q">Где хранятся настройки?<span class="chev">▾</span></button>
+          <div class="faq-a"><span class="mono">%APPDATA%\FpsOverlay\config.ini</span> — простой текстовый файл, можно править вручную или переносить между ПК.</div>
+        </div>
+        <div class="faq-item reveal reveal-d4">
+          <button class="faq-q">Почему нужен администратор?<span class="chev">▾</span></button>
+          <div class="faq-a">Глобальные хоткеи (Ctrl+Shift+F10–F12) должны работать поверх полноэкранных игр — для этого окну нужен соответствующий уровень привилегий (манифест).</div>
+        </div>
+        <div class="faq-item reveal reveal-d5">
+          <button class="faq-q">AMD GPU — будет работать?<span class="chev">▾</span></button>
+          <div class="faq-a">FPS, ЦП, ОЗУ и время кадра — да. Температура/VRAM/загрузка ГП сейчас через NVML (NVIDIA). Для AMD можно расширить монитор — исходники открыты.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="download">
+    <div class="container">
+      <div class="download-box reveal">
+        <div class="badge-row" style="justify-content:center; margin-bottom:18px;">
+          <span class="pill">Версия 1.0.0</span>
+          <span class="pill green">Стабильно</span>
+        </div>
+        <h2>Готовы увидеть<br><span class="grad">свои кадры?</span></h2>
+        <p>Скачайте установщик, запустите от администратора — и оверлей уже в трее.</p>
+        <div class="dl-actions">
+          <a class="btn btn-primary" href="https://github.com/R3G1ST/FramePulse/releases/download/v1.0.0/FramePulse-Setup.exe" id="dlBtn">
+            ⬇ FramePulse-Setup.exe
+          </a>
+          <a class="btn btn-secondary" href="https://github.com/R3G1ST/FramePulse/releases">
+            Все релизы
+          </a>
+        </div>
+        <div class="dl-meta">
+          <span>🪟 Windows 10 / 11</span>
+          <span>📦 2.3 MB</span>
+          <span>📄 MIT License</span>
+          <span>🌐 Русский / English</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#top" class="logo"><span class="logo-mark">FP</span> FramePulse</a>
+        <p>Лёгкий игровой оверлей для Windows. FPS, система и память — поверх любой игры.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Проект</h4>
+        <a href="#features">Возможности</a>
+        <a href="#how">Установка</a>
+        <a href="#changelog">Changelog</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4>Ресурсы</h4>
+        <a href="https://github.com/R3G1ST/FramePulse">GitHub</a>
+        <a href="https://github.com/R3G1ST/FramePulse/releases">Releases</a>
+        <a href="https://github.com/R3G1ST/FramePulse/issues">Issues</a>
+        <a href="https://r3g1st.github.io/FramePulse/">Сайт</a>
+      </div>
+      <div class="footer-col">
+        <h4>Лицензия</h4>
+        <a href="https://github.com/R3G1ST/FramePulse/blob/main/LICENSE">MIT License</a>
+        <a href="https://github.com/R3G1ST/FramePulse/blob/main/README.md">README</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 FramePulse · R3G1ST</span>
+      <span>Сделано с ❤️ для геймеров</span>
+    </div>
+  </footer>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* Loader */
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var el = document.getElementById('loader');
+          if (el) el.classList.add('hide');
+        }, 350);
+      });
+
+      /* Theme */
+      var root = document.documentElement;
+      var themeBtn = document.getElementById('themeBtn');
+      var themeIcon = document.getElementById('themeIcon');
+      function setTheme(t) {
+        root.setAttribute('data-theme', t);
+        themeIcon.textContent = t === 'dark' ? '☾' : '☀';
+        try { localStorage.setItem('fp-theme', t); } catch (e) {}
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = t === 'dark' ? '#07090f' : '#f3f6fc';
+      }
+      try {
+        var saved = localStorage.getItem('fp-theme');
+        if (saved) setTheme(saved);
+        else if (window.matchMedia('(prefers-color-scheme: light)').matches) setTheme('light');
+      } catch (e) {}
+      themeBtn.addEventListener('click', function () {
+        setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+
+      /* Nav scroll + progress */
+      var nav = document.getElementById('nav');
+      var progress = document.getElementById('progress');
+      function onScroll() {
+        var y = window.scrollY || 0;
+        nav.classList.toggle('scrolled', y > 12);
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      /* Burger */
+      var burger = document.getElementById('burger');
+      var mobileMenu = document.getElementById('mobileMenu');
+      burger.addEventListener('click', function () {
+        burger.classList.toggle('open');
+        mobileMenu.classList.toggle('open');
+        document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+      });
+      mobileMenu.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          burger.classList.remove('open');
+          mobileMenu.classList.remove('open');
+          document.body.style.overflow = '';
+        });
+      });
+
+      /* Reveal on scroll */
+      var reveals = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (en.isIntersecting) {
+              en.target.classList.add('visible');
+              io.unobserve(en.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+        reveals.forEach(function (el) { io.observe(el); });
+      } else {
+        reveals.forEach(function (el) { el.classList.add('visible'); });
+      }
+
+      /* Counters */
+      var counters = document.querySelectorAll('[data-count]');
+      var counted = false;
+      function animateCounters() {
+        if (counted) return;
+        counted = true;
+        counters.forEach(function (el) {
+          var target = parseFloat(el.getAttribute('data-count'));
+          var isFloat = String(target).indexOf('.') >= 0;
+          var start = performance.now();
+          var dur = 1400;
+          function tick(now) {
+            var p = Math.min(1, (now - start) / dur);
+            var ease = 1 - Math.pow(1 - p, 3);
+            var val = target * ease;
+            el.textContent = isFloat ? val.toFixed(1) : Math.round(val);
+            if (p < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        });
+      }
+      if ('IntersectionObserver' in window && counters.length) {
+        var cio = new IntersectionObserver(function (es) {
+          if (es[0].isIntersecting) { animateCounters(); cio.disconnect(); }
+        }, { threshold: 0.4 });
+        cio.observe(counters[0].closest('.hero-stats') || counters[0]);
+      } else { animateCounters(); }
+
+      /* Cursor glow */
+      var glow = document.getElementById('cursor-glow');
+      if (window.matchMedia('(pointer: fine)').matches) {
+        var gx = 0, gy = 0, tx = 0, ty = 0;
+        document.addEventListener('mousemove', function (e) { tx = e.clientX; ty = e.clientY; });
+        (function loop() {
+          gx += (tx - gx) * 0.12;
+          gy += (ty - gy) * 0.12;
+          glow.style.left = gx + 'px';
+          glow.style.top = gy + 'px';
+          requestAnimationFrame(loop);
+        })();
+      }
+
+      /* Toast */
+      var toast = document.getElementById('toast');
+      var toastTimer;
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2200);
+      }
+
+      /* Demo overlay live stats */
+      var dFps = document.getElementById('dFps');
+      var dFt = document.getElementById('dFt');
+      var dLow = document.getElementById('dLow');
+      var dCpu = document.getElementById('dCpu');
+      var dCpuV = document.getElementById('dCpuV');
+      var dGpu = document.getElementById('dGpu');
+      var dGpuV = document.getElementById('dGpuV');
+      var dTemp = document.getElementById('dTemp');
+      var dVram = document.getElementById('dVram');
+      var dRam = document.getElementById('dRam');
+      var dClock = document.getElementById('dClock');
+      var dStatus = document.getElementById('dStatus');
+      var baseFps = 144, baseGpu = 71, baseCpu = 34, baseTemp = 72;
+
+      function rnd(a, b) { return a + Math.random() * (b - a); }
+
+      function tickDemo() {
+        var fps = Math.max(30, Math.round(baseFps + rnd(-8, 8)));
+        var cpu = Math.min(99, Math.max(5, Math.round(baseCpu + rnd(-7, 7))));
+        var gpu = Math.min(100, Math.max(10, Math.round(baseGpu + rnd(-6, 6))));
+        var temp = Math.round(baseTemp + rnd(-3, 4));
+        var ft = (1000 / fps + rnd(-0.4, 0.6)).toFixed(1);
+        var low = Math.max(8, Math.round(fps * rnd(0.55, 0.75)));
+
+        dFps.textContent = fps;
+        dFt.textContent = ft;
+        dLow.textContent = low;
+        dCpuV.textContent = cpu + '%';
+        dCpu.style.width = cpu + '%';
+        dCpu.className = cpu >= 90 ? 'hot' : (cpu >= 75 ? 'warm' : '');
+        dGpuV.textContent = gpu + '%';
+        dGpu.style.width = gpu + '%';
+        dGpu.className = gpu >= 90 ? 'hot' : (gpu >= 75 ? 'warm' : '');
+        dTemp.textContent = temp + '°C';
+        dVram.textContent = (rnd(4.2, 6.8)).toFixed(1) + '/8';
+        dRam.textContent = (rnd(10, 16)).toFixed(0) + '/32';
+
+        var now = new Date();
+        dClock.textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      }
+      tickDemo();
+      setInterval(tickDemo, 900);
+
+      /* Demo process chips */
+      document.querySelectorAll('.chip[data-proc]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          document.querySelectorAll('.chip[data-proc]').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+          var p = chip.getAttribute('data-proc');
+          dStatus.textContent = p || 'авто · активное окно';
+          if (p.indexOf('cs2') >= 0) { baseFps = 280; baseGpu = 55; baseCpu = 40; baseTemp = 65; }
+          else if (p.indexOf('Cyber') >= 0) { baseFps = 78; baseGpu = 96; baseCpu = 55; baseTemp = 78; }
+          else if (!p) { baseFps = 144; baseGpu = 45; baseCpu = 22; baseTemp = 60; }
+          else { baseFps = 144; baseGpu = 71; baseCpu = 34; baseTemp = 72; }
+          showToast('Демо: ' + (p || 'активное окно'));
+        });
+      });
+
+      /* Settings toggles */
+      document.querySelectorAll('[data-toggle]').forEach(function (sw) {
+        sw.addEventListener('click', function () {
+          sw.classList.toggle('on');
+        });
+      });
+
+      /* Opacity slider */
+      var range = document.getElementById('opacityRange');
+      var opVal = document.getElementById('opVal');
+      var opPreview = document.getElementById('opPreview');
+      if (range) {
+        range.addEventListener('input', function () {
+          var v = range.value;
+          opVal.textContent = v;
+          opPreview.style.background = 'rgba(8,10,14,' + (v / 255) + ')';
+        });
+      }
+
+      /* Corner buttons */
+      document.querySelectorAll('[data-corner]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('[data-corner]').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          showToast('Позиция: ' + btn.textContent.trim());
+        });
+      });
+
+      /* Hotkey copy */
+      document.querySelectorAll('[data-copy]').forEach(function (card) {
+        card.addEventListener('click', function () {
+          var text = card.getAttribute('data-copy');
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+              showToast('Скопировано: ' + text);
+            }).catch(function () {
+              showToast(text);
+            });
+          } else {
+            showToast(text);
+          }
+        });
+      });
+
+      /* FAQ accordion */
+      document.querySelectorAll('.faq-q').forEach(function (q) {
+        q.addEventListener('click', function () {
+          var item = q.closest('.faq-item');
+          var wasOpen = item.classList.contains('open');
+          document.querySelectorAll('.faq-item').forEach(function (i) { i.classList.remove('open'); });
+          if (!wasOpen) item.classList.add('open');
+        });
+      });
+
+      /* Smooth anchor offset for fixed nav */
+      document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          var id = a.getAttribute('href');
+          if (id === '#' || id.length < 2) return;
+          var target = document.querySelector(id);
+          if (!target) return;
+          e.preventDefault();
+          var top = target.getBoundingClientRect().top + window.scrollY - 72;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        });
+      });
+
+      /* Download click feedback */
+      var dlBtn = document.getElementById('dlBtn');
+      if (dlBtn) {
+        dlBtn.addEventListener('click', function () {
+          showToast('Скачивание FramePulse-Setup.exe…');
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
